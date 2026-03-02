@@ -59,6 +59,15 @@ class Model:
             {"type": "top_of", "child": child_id, "parent": parent_id}
         )
 
+    def add_align_x(self, child_id: str, parent_id: str):
+        if child_id not in self.entities or parent_id not in self.entities:
+            raise ValueError(
+                f"Both child '{child_id}' and parent '{parent_id}' must exist in the model"
+            )
+        self.dependencies.append(
+            {"type": "align_x", "child": child_id, "parent": parent_id}
+        )
+
     def compile(self):
         """
         Run solver to resolve dependencies and then lower to OpenSCAD.

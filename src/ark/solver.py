@@ -28,3 +28,5 @@ class SimpleSolver:
             if dep["type"] == "top_of":
                 # The dependency solver should set the position
                 child.z = parent.z + parent.height
+            elif dep["type"] == "align_x":
+                child.x = parent.x

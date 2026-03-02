@@ -23,6 +23,17 @@ def test_top_of_dependency():
     assert "translate([0.0, 0.0, 50.0]) cube([50.0, 50.0, 25.0])" in result.openscad
 
 
+def test_align_x_dependency():
+    """Solver should adjust child.x based on parent.x"""
+    model = ak.Model("alignx_test")
+    model.add_cube("base", width=10, depth=10, height=10, x=100)
+    model.add_cube("child", width=5, depth=5, height=5, x=0)
+    model.add_align_x("child", "base")
+    result = model.compile()
+    assert result.success
+    assert "translate([100.0, 0.0, 0.0]) cube([5.0, 5.0, 5.0]);" in result.openscad
+
+
 def test_duplicate_id_error():
     """Adding two cubes with same id should produce a ValueError."""
     model = ak.Model("dup_test")
