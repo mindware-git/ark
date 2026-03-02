@@ -1,6 +1,12 @@
 from .entity import Entity
 from .solver import SimpleSolver
 
+# simple semantic-to-color default for visualization purposes
+DEFAULT_COLOR = [0.5, 0.5, 0.5]
+# note: semantic color map is no longer hard-coded here; callers may
+# provide their own map when calling compile().  We keep DEFAULT_COLOR
+# as fallback for any unmapped semantics.
+
 
 class CompileResult:
     """
@@ -86,9 +92,13 @@ class Model:
             {"type": "right_of", "child": right_id, "parent": left_id}
         )
 
-    def compile(self):
+    def compile(self, semantic_color_map: dict | None = None):
         """
         Run solver to resolve dependencies and then lower to OpenSCAD.
+
+        :param semantic_color_map: optional mapping from semantic string to
+            [r,g,b] colour.  If not provided, we only use DEFAULT_COLOR for
+            all semantics (no named variables will be emitted).
         """
         result = CompileResult(success=True)
 
@@ -105,14 +115,27 @@ class Model:
             f"// model: {self.name}",
         ]
 
+        # declare color variables for any semantics we have in the model
+        semantics = {ent.semantic for ent in self.entities.values() if ent.semantic}
+        color_vars = {}
+        if semantic_color_map:
+            for sem in sorted(semantics):
+                var_name = f"{sem.replace(' ', '_')}_color"
+                color = semantic_color_map.get(sem, DEFAULT_COLOR)
+                scad_lines.append(f"{var_name} = [{color[0]}, {color[1]}, {color[2]}];")
+                color_vars[sem] = var_name
+            if semantics:
+                scad_lines.append("")  # blank line after declarations
+
         for ent in self.entities.values():
             if ent.semantic:
                 scad_lines.append(f"// semantic: {ent.semantic}")
             # clamp None -> 0
             z_val = ent.z if ent.z is not None else 0
-            scad_lines.append(
-                f"translate([{ent.x}, {ent.y}, {z_val}]) cube([{ent.width}, {ent.depth}, {ent.height}]);"
-            )
+            cube_stmt = f"translate([{ent.x}, {ent.y}, {z_val}]) cube([{ent.width}, {ent.depth}, {ent.height}]);"
+            if ent.semantic and ent.semantic in color_vars:
+                cube_stmt = f"color({color_vars[ent.semantic]}) {cube_stmt}"
+            scad_lines.append(cube_stmt)
 
         result.openscad = "\n".join(scad_lines)
 

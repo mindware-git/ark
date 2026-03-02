@@ -114,3 +114,21 @@ def test_constraints_enforcement():
     result = model.compile()
     assert not result.success
     assert any("negative" in e.lower() for e in result.errors)
+
+
+def test_semantic_color_output():
+    """Color variables should be declared and applied based on semantic tags."""
+    model = ak.Model("color_test")
+    model.add_cube("wall", width=1, depth=1, height=1, semantic="Wall")
+    model.add_cube("unknown", width=1, depth=1, height=1, semantic="Something")
+    # define our own map inside the test rather than relying on module globals
+    local_map = {"Wall": [0.85, 0.85, 0.85]}
+    result = model.compile(semantic_color_map=local_map)
+    # declaration for known semantic
+    assert "Wall_color = [0.85, 0.85, 0.85];" in result.openscad
+    # unknown semantics get default color declaration (default color always
+    # used when sem not in provided map)
+    assert "Something_color = [0.5, 0.5, 0.5];" in result.openscad
+    # cubes should be wrapped in color() calls
+    assert "color(Wall_color)" in result.openscad
+    assert "color(Something_color)" in result.openscad
