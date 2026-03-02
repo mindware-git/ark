@@ -86,6 +86,15 @@ def test_semantic_tag_assignment():
     assert cube.semantic == "#Public"
 
 
+def test_semantic_comment_in_output():
+    """Test that semantic tags are included as comments in the OpenSCAD output."""
+    model = ak.Model("semantic_comment_test")
+    model.add_cube("c1", width=10, depth=10, height=10, semantic="#Private")
+    result = model.compile()
+    assert result.success
+    assert "// semantic: #Private" in result.openscad
+
+
 def test_dependency_resolution():
     """Test that dependencies affect entity placement deterministically."""
     model = ak.Model("dependency_test")

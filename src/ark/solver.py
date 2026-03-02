@@ -30,3 +30,7 @@ class SimpleSolver:
                 child.z = parent.z + parent.height
             elif dep["type"] == "align_x":
                 child.x = parent.x
+            elif dep["type"] == "align_y":
+                child.y = parent.y
+            elif dep["type"] == "right_of":
+                child.x = parent.x + parent.width

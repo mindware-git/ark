@@ -68,6 +68,24 @@ class Model:
             {"type": "align_x", "child": child_id, "parent": parent_id}
         )
 
+    def add_align_y(self, child_id: str, parent_id: str):
+        if child_id not in self.entities or parent_id not in self.entities:
+            raise ValueError(
+                f"Both child '{child_id}' and parent '{parent_id}' must exist in the model"
+            )
+        self.dependencies.append(
+            {"type": "align_y", "child": child_id, "parent": parent_id}
+        )
+
+    def add_right_of(self, right_id: str, left_id: str):
+        if right_id not in self.entities or left_id not in self.entities:
+            raise ValueError(
+                f"Both right '{right_id}' and left '{left_id}' must exist in the model"
+            )
+        self.dependencies.append(
+            {"type": "right_of", "child": right_id, "parent": left_id}
+        )
+
     def compile(self):
         """
         Run solver to resolve dependencies and then lower to OpenSCAD.
@@ -88,6 +106,8 @@ class Model:
         ]
 
         for ent in self.entities.values():
+            if ent.semantic:
+                scad_lines.append(f"// semantic: {ent.semantic}")
             # clamp None -> 0
             z_val = ent.z if ent.z is not None else 0
             scad_lines.append(

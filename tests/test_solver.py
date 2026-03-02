@@ -34,6 +34,28 @@ def test_align_x_dependency():
     assert "translate([100.0, 0.0, 0.0]) cube([5.0, 5.0, 5.0]);" in result.openscad
 
 
+def test_align_y_dependency():
+    """Solver should adjust child.y based on parent.y"""
+    model = ak.Model("aligny_test")
+    model.add_cube("base", width=10, depth=10, height=10, y=50)
+    model.add_cube("child", width=5, depth=5, height=5, y=0)
+    model.add_align_y("child", "base")
+    result = model.compile()
+    assert result.success
+    assert "translate([0.0, 50.0, 0.0]) cube([5.0, 5.0, 5.0]);" in result.openscad
+
+
+def test_right_of_dependency():
+    """Solver should adjust child.x based on parent.x + parent.width"""
+    model = ak.Model("rightof_test")
+    model.add_cube("left", width=10, depth=10, height=10, x=0)
+    model.add_cube("right", width=5, depth=5, height=5, x=0)
+    model.add_right_of("right", "left")
+    result = model.compile()
+    assert result.success
+    assert "translate([10.0, 0.0, 0.0]) cube([5.0, 5.0, 5.0]);" in result.openscad
+
+
 def test_duplicate_id_error():
     """Adding two cubes with same id should produce a ValueError."""
     model = ak.Model("dup_test")
